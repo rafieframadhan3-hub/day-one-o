@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>WORLD BATTLE 3D</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050b14;
+      color: #fff;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* UI OVERLAY */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .interactive { pointer-events: auto; }
+
+    #main-menu {
+      background: rgba(10, 20, 38, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 150, 255, 0.3);
+      border-radius: 16px;
+      padding: 30px 20px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 100, 255, 0.2);
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #3b82f6;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .menu-btn {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: white;
+    }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #2563eb, #1d4ed8);
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-green {
+      background: linear-gradient(180deg, #10b981, #059669);
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-dark {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-btn:active { transform: scale(0.98); }
+
+    #room-menu {
+      display: none;
+      background: rgba(10, 20, 38, 0.9);
+      border: 1px solid rgba(0, 150, 255, 0.3);
+      border-radius: 16px;
+      padding: 25px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin: 15px 0;
+    }
+
+    .room-input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    #game-hud {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .top-bar {
+      position: absolute;
+      top: 15px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 0 15px;
+    }
+
+    .hp-box {
+      flex: 1;
+      max-width: 200px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      height: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+      position: relative;
+    }
+
+    .hp-fill {
+      height: 100%;
+      background: #22c55e;
+      width: 100%;
+      transition: width 0.3s;
+    }
+
+    .vs-badge {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+
+    .controls-right {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .skill-btn {
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    }
+
+    .btn-small { width: 50px; height: 50px; background: #3b82f6; font-size: 11px; }
+    .btn-main { width: 70px; height: 70px; background: #ef4444; font-size: 13px; }
+
+    .joystick-area {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      pointer-events: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .joystick-stick {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+    }
+  </style>
+
+  <!-- Library Three.js & Socket.io -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <div id="game-container"></div>
+
+  <div class="overlay">
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="interactive">
+      <div class="title">WORLD BATTLE 3D</div>
+      <button class="menu-btn btn-blue" onclick="openRoomMenu()">PLAY 1V1</button>
+      <button class="menu-btn btn-green" onclick="openRoomMenu()">MULTIPLAYER</button>
+      <button class="menu-btn btn-dark">HOW TO PLAY</button>
+      <button class="menu-btn btn-dark">SETTINGS</button>
+    </div>
+
+    <!-- ROOM MENU -->
+    <div id="room-menu" class="interactive">
+      <div style="font-weight:bold; margin-bottom:15px; letter-spacing:1px;">MABAR ROOM</div>
+      <button class="menu-btn btn-blue" onclick="createRoom()">🔥 BUAT ROOM</button>
+      <div class="input-group">
+        <input type="text" id="roomCodeInput" class="room-input" placeholder="KODE ROOM">
+        <button class="menu-btn btn-dark" style="width: auto; padding: 0 15px; margin:0;" onclick="joinRoom()">GABUNG</button>
+      </div>
+      <button class="menu-btn btn-dark" onclick="backToMain()">KEMBALI</button>
+    </div>
+
+    <!-- IN-GAME HUD -->
+    <div id="game-hud">
+      <div class="top-bar">
+        <div class="hp-box"><div class="hp-fill" id="player-hp"></div></div>
+        <div class="vs-badge">VS</div>
+        <div class="hp-box"><div class="hp-fill" id="enemy-hp"></div></div>
+      </div>
+
+      <div class="controls-right">
+        <div class="skill-btn btn-small" style="background:#2563eb;" onclick="triggerAction('Skill 1')">SKILL 1</div>
+        <div class="skill-btn btn-small" style="background:#10b981;" onclick="triggerAction('Skill 2')">SKILL 2</div>
+        <div class="skill-btn btn-small" style="background:#8b5cf6;" onclick="triggerAction('Skill 3')">SKILL 3</div>
+        <div class="skill-btn btn-main" onclick="triggerAction('Attack')">ATTACK</div>
+      </div>
+
+      <div class="joystick-area">
+        <div class="joystick-stick"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================= LOGIKA MABAR & SOCKET.IO ================= */
+    const socket = io();
+    let currentRoomId = null;
+
+    const mainMenu = document.getElementById('main-menu');
+    const roomMenu = document.getElementById('room-menu');
+    const gameHud = document.getElementById('game-hud');
+
+    function openRoomMenu() {
+      mainMenu.style.display = 'none';
+      roomMenu.style.display = 'block';
+    }
+
+    function backToMain() {
+      roomMenu.style.display = 'none';
+      mainMenu.style.display = 'block';
+    }
+
+    function createRoom() {
+      socket.emit('createRoom');
+    }
+
+    function joinRoom() {
+      const code = document.getElementById('roomCodeInput').value;
+      if (code) {
+        socket.emit('joinRoom', code);
+      } else {
+        alert('Masukkan kode room!');
+      }
+    }
+
+    // Socket Event Listener
+    socket.on('roomCreated', (roomId) => {
+      currentRoomId = roomId;
+      alert('Room berhasil dibuat! Kode Room: ' + roomId + '\nBagikan kode ini ke temanmu.');
+    });
+
+    socket.on('gameStart', (data) => {
+      currentRoomId = data.roomId;
+      roomMenu.style.display = 'none';
+      gameHud.style.display = 'block';
+      targetCameraPosition = { x: 0, y: 8, z: 12 };
+      alert('Pemain lain bergabung! Game Dimulai.');
+    });
+
+    socket.on('errorMsg', (msg) => { alert(msg); });
+
+    function triggerAction(actionName) {
+      if (playerMesh) {
+        playerMesh.position.y += 0.8;
+        setTimeout(() => { playerMesh.position.y = 1; }, 200);
+      }
+      if (currentRoomId) {
+        socket.emit('playerAction', { roomId: currentRoomId, action: actionName });
+      }
+    }
+
+    socket.on('enemyAction', (data) => {
+      if (enemyMesh) {
+        enemyMesh.position.y += 0.8;
+        setTimeout(() => { enemyMesh.position.y = 1; }, 200);
+      }
+    });
+
+    /* ================= THREE.JS 3D SCENE ================= */
+    const container = document.getElementById('game-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    let targetCameraPosition = { x: 0, y: 12, z: 22 };
+    camera.position.set(targetCameraPosition.x, targetCameraPosition.y, targetCameraPosition.z);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    // Environment
+    const groundGeo = new THREE.SphereGeometry(60, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.35);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x7ec850 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y = -58;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    function createTree(x, z) {
+      const treeGroup = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 2, 6), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
+      trunk.position.y = 1;
+      treeGroup.add(trunk);
+      const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.8, 4, 6), new THREE.MeshLambertMaterial({ color: 0x2e8b57 }));
+      leaves.position.y = 3;
+      treeGroup.add(leaves);
+      treeGroup.position.set(x, 0, z);
+      scene.add(treeGroup);
+    }
+
+    [[-8, -5], [8, -6], [-12, 2], [12, 3], [-6, -12], [5, -10]].forEach(pos => createTree(pos[0], pos[1]));
+
+    // Karakter
+    function createCharacter(colorHex) {
+      const charGroup = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.8), new THREE.MeshLambertMaterial({ color: colorHex }));
+      body.position.y = 1.2;
+      charGroup.add(body);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshLambertMaterial({ color: 0xffdbac }));
+      head.position.y = 2.2;
+      charGroup.add(head);
+      return charGroup;
+    }
+
+    const playerMesh = createCharacter(0x2563eb);
+    playerMesh.position.set(0, 0, 2);
+    scene.add(playerMesh);
+
+    const enemyMesh = createCharacter(0xef4444);
+    enemyMesh.position.set(0, 0, -6);
+    enemyMesh.rotation.y = Math.PI;
+    scene.add(enemyMesh);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      camera.position.x += (targetCameraPosition.x - camera.position.x) * 0.05;
+      camera.position.y += (targetCameraPosition.y - camera.position.y) * 0.05;
+      camera.position.z += (targetCameraPosition.z - camera.position.z) * 0.05;
+      camera.lookAt(0, 1, 0);
+
+      if (mainMenu.style.display !== 'none' || roomMenu.style.display !== 'none') {
+        scene.rotation.y += 0.002;
+      } else {
+        scene.rotation.y = 0;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
